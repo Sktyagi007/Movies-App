@@ -1,4 +1,5 @@
 import { Component } from "react";
+import axios from 'axios';
 import {movies} from "../movieData"
 
 class MovieList extends Component{
@@ -6,19 +7,58 @@ class MovieList extends Component{
         super();
         this.state={
             hover:"",
-            pArr :[1]
+            pArr :[1],
+            movies:[],
+            currpage:1
         };
     }
+    async componentDidMount(){
+        const res = await axios.get(`https://api.themoviedb.org/3/movie/popular?api_key=97f63997ed44b3422da2e24d73bf8af6&language=en-US&page=${this.state.currpage}`);
+        this.setState({
+            movies:[...res.data.results]
+        })
+    }
+
+    changeMovies = async()=>{
+        const res = await axios.get(`https://api.themoviedb.org/3/movie/popular?api_key=97f63997ed44b3422da2e24d73bf8af6&language=en-US&page=${this.state.currpage}`);
+        this.setState({
+            movies:[...res.data.results]
+        })
+    }
+    handleNext = ()=>{
+        this.setState({
+            pArr:[...this.state.pArr,this.state.pArr.length+1],
+            currpage:this.state.currpage+1
+        },this.changeMovies)
+    }
+
+    handlePrev = ()=>{
+        if(this.state.currpage != 1){
+            this.setState({
+                currpage:this.state.currpage-1
+            },this.changeMovies)
+        } 
+    }
+
+    handlePageClick = (ele)=>{
+        if(ele!=this.state.currpage){
+            this.setState({
+                currpage: ele
+            },this.changeMovies)
+        }
+    }
+
+
 
     render(){
-        let moviesArr = movies.results
+        // let moviesArr = movies.results
         return(
             <>
             <div>
                 <h3 className="text-center"><strong>Trending</strong></h3>
             </div>
             <div className="movies-list">
-                {moviesArr.map((movieEle)=>(
+                {this.state.movies.map((movieEle)=>(
                     <div className="card movie-card" onMouseEnter={()=>this.setState({hover:movieEle.id})} onMouseLeave={()=>this.setState({hover:""})}>
                         <img src={`https://image.tmdb.org/t/p/original${movieEle.backdrop_path}`} style={{height:'40vh',width:'20vw'}} className="card-img-top movie-img" alt="..."/>
                         <h5 className="card-title movie-title">{movieEle.title}</h5>
@@ -33,11 +73,11 @@ class MovieList extends Component{
             <div style={{display:"flex",justifyContent:"center"}}>
                 <nav aria-label="Page navigation example">
                     <ul className="pagination">
-                        <li className="page-item"><a className="page-link" href="#">Previous</a></li>
+                        <li className="page-item"><a className="page-link" onClick={this.handlePrev}>Previous</a></li>
                         {this.state.pArr.map((ele)=>(
-                            <li className="page-item"><a className="page-link" href="#">{ele}</a></li>
+                            <li className="page-item"><a className="page-link" onClick={()=>this.handlePageClick(ele)}>{ele}</a></li>
                         ))}
-                        <li className="page-item"><a className="page-link" href="#">Next</a></li>
+                        <li className="page-item"><a className="page-link" onClick={this.handleNext} >Next</a></li>
                     </ul>
                 </nav>
             </div>
